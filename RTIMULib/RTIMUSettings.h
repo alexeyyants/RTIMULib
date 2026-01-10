@@ -143,6 +143,17 @@
 
 #define RTIMULIB_BMX055_MAG_PRESET          "BMX055MagPreset"
 
+//  LIS3MDL settings keys
+
+#define RTIMULIB_LIS3MDL_COMPASS_SAMPLERATE "LIS3MDLCompassSampleRate"
+#define RTIMULIB_LIS3MDL_COMPASS_FSR       "LIS3MDLCompassFsr"
+
+#define RTIMULIB_LIS3MDL_GYRO_SAMPLERATE    "LIS3MDLGyroSampleRate"
+#define RTIMULIB_LIS3MDL_GYRO_FSR           "LIS3MDLGyroFsr"
+
+#define RTIMULIB_LIS3MDL_ACCEL_SAMPLERATE   "LIS3MDLAccelSampleRate"
+#define RTIMULIB_LIS3MDL_ACCEL_FSR          "LIS3MDLAccelFsr"
+
 //  Gyro bias keys
 
 #define RTIMULIB_GYRO_BIAS_VALID            "GyroBiasValid"

@@ -34,6 +34,7 @@
 #include "IMUDrivers/RTIMULSM9DS0.h"
 #include "IMUDrivers/RTIMULSM9DS1.h"
 #include "IMUDrivers/RTIMUBMX055.h"
+#include "IMUDrivers/RTIMULIS3MDL.h"
 
 #include "IMUDrivers/RTPressureBMP180.h"
 #include "IMUDrivers/RTPressureLPS25H.h"
@@ -335,6 +336,16 @@ bool RTIMUSettings::discoverIMU(int& imuType, bool& busIsI2C, unsigned char& sla
                 slaveAddress = BNO055_ADDRESS1;
                 busIsI2C = true;
                 HAL_INFO("Detected BNO055 at option address\n");
+                return true;
+            }
+        }
+
+        if (HALRead(LIS3MDL_ADDRESS, LIS3MDL_WHO_AM_I, 1, &result, "")) {
+            if (result == LIS3MDL_ID) {
+                imuType = RTIMU_TYPE_LIS3MDL;
+                slaveAddress = LIS3MDL_ADDRESS;
+                busIsI2C = true;
+                HAL_INFO("Detected LIS3MDL at standard address\n");
                 return true;
             }
         }

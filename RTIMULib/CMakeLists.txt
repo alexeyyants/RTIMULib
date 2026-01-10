@@ -71,6 +71,7 @@ SET(LIBRTIMU_SRCS
     IMUDrivers/RTHumidity.cpp
     IMUDrivers/RTHumidityHTS221.cpp
     IMUDrivers/RTHumidityHTU21D.cpp
+    IMUDrivers/RTIMULIS3MDL.cpp
 )
 
 IF(WIN32 AND QT5)
