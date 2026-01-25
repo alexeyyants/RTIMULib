@@ -143,16 +143,18 @@
 
 #define RTIMULIB_BMX055_MAG_PRESET          "BMX055MagPreset"
 
+// LSM6DSOX settings keys
+
+#define RTIMULIB_LSM6DSOX_GYRO_SAMPLERATE   "LSM6DSOXGyroSampleRate"
+#define RTIMULIB_LSM6DSOX_GYRO_FSR          "LSM6DSOXGyroFsr"
+
+#define RTIMULIB_LSM6DSOX_ACCEL_SAMPLERATE  "LSM6DSOXAccelSampleRate"
+#define RTIMULIB_LSM6DSOX_ACCEL_FSR         "LSM6DSOXAccelFsr"
+
 //  LIS3MDL settings keys
 
 #define RTIMULIB_LIS3MDL_COMPASS_SAMPLERATE "LIS3MDLCompassSampleRate"
-#define RTIMULIB_LIS3MDL_COMPASS_FSR       "LIS3MDLCompassFsr"
-
-#define RTIMULIB_LIS3MDL_GYRO_SAMPLERATE    "LIS3MDLGyroSampleRate"
-#define RTIMULIB_LIS3MDL_GYRO_FSR           "LIS3MDLGyroFsr"
-
-#define RTIMULIB_LIS3MDL_ACCEL_SAMPLERATE   "LIS3MDLAccelSampleRate"
-#define RTIMULIB_LIS3MDL_ACCEL_FSR          "LIS3MDLAccelFsr"
+#define RTIMULIB_LIS3MDL_COMPASS_FSR        "LIS3MDLCompassFsr"
 
 //  Gyro bias keys
 
@@ -361,6 +363,15 @@ public:
     int m_BMX055AccelFsr;                                   // the accel full scale range
 
     int m_BMX055MagPreset;                                  // the mag preset code
+
+    //  LSM6DSOX
+    int m_LSM6DSOXGyroSampleRate;                           // the gyro sample rate
+    int m_LSM6DSOXGyroFsr;                                  // the gyro full scale range
+    int m_LSM6DSOXAccelSampleRate;                          // the accel sample rate
+    int m_LSM6DSOXAccelFsr;                                 // the accel full scale range
+    //  LIS3MDL
+    int m_LIS3MDLCompassSampleRate;                         // the compass sample rate
+    int m_LIS3MDLCompassFsr;                                // the compass full scale range
 
 private:
     void setBlank();

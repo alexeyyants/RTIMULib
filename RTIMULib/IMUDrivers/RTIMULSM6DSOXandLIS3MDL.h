@@ -1,0 +1,33 @@
+#ifndef _RTIMULSM6DSOXandLIS3MDL_H
+#define _RTIMULSM6DSOXandLIS3MDL_H
+
+#include "RTIMU.h"
+
+class RTIMULSM6DSOXandLIS3MDL : public RTIMU
+{
+public:
+    RTIMULSM6DSOXandLIS3MDL(RTIMUSettings *settings);
+    ~RTIMULSM6DSOXandLIS3MDL();
+
+    // Pure virtual methods you MUST implement:
+    virtual const char *IMUName() { return "LSM6DSOX+LIS3MDL"; }
+    virtual int IMUType() { return RTIMU_TYPE_LSM6DSOX_LIS3MDL; }  // Define this in RTIMUDefs.h
+    virtual bool IMUInit();
+    virtual bool IMURead();
+    virtual int IMUGetPollInterval();
+
+private:
+    // Private methods for setup
+    bool setLSM6DSOXConfig();
+    bool setLIS3MDLConfig();
+    void updateGyroSampleRate(unsigned char lsm6dsox_odr, bool low_power_mode = false);
+
+    // Member variables
+    unsigned char m_lsm6dsoxAddr;  // I2C address for LSM6DSOX
+    unsigned char m_lis3mdlAddr;   // I2C address for LIS3MDL
+    RTFLOAT m_gyroScale;
+    RTFLOAT m_accelScale;
+    RTFLOAT m_compassScale;
+};
+
+#endif

@@ -43,7 +43,9 @@
 #define RTIMU_TYPE_GD20HM303DLHC            8                   // STM L3GD20H/LSM303DHLC (new Adafruit IMU)
 #define RTIMU_TYPE_BMX055                   9                   // Bosch BMX055
 #define RTIMU_TYPE_BNO055                   10                  // Bosch BNO055
-#define RTIMU_TYPE_LIS3MDL                  11                  // Adafruit LIS3MDL
+#define RTIMU_TYPE_LIS3MDL                  11                  // STM LIS3MDL
+#define RTIMU_TYPE_LSM6DSOX                 12                  // STM LSM6DSOX
+#define RTIMU_TYPE_LSM6DSOX_LIS3MDL         13                  // STM LSM6DSOX + LIS3MDL combined
 
 //----------------------------------------------------------
 //
@@ -1116,5 +1118,161 @@
 //  Power modes
 
 #define BNO055_PWR_MODE_NORMAL      0x00
+
+
+//----------------------------------------------------------
+//
+//  LIS3MDL
+
+//  LIS3MDL I2C Slave Addresses
+
+#define LIS3MDL_I2CADDR_DEFAULT     0x1C
+
+//  Register map
+
+#define LIS3MDL_REG_WHO_AM_I 0x0F
+#define LIS3MDL_REG_WHO_AM_I_VALUE 0x3D
+// Control registers
+#define LIS3MDL_REG_CTRL_REG1 0x20
+#define LIS3MDL_REG_CTRL_REG2 0x21
+#define LIS3MDL_REG_CTRL_REG3 0x22
+#define LIS3MDL_REG_CTRL_REG4 0x23
+// Data registers
+#define LIS3MDL_REG_STATUS 0x27
+#define LIS3MDL_REG_OUT_X_L 0x28
+
+/** The magnetometer ranges */
+typedef enum {
+  LIS3MDL_RANGE_4_GAUSS = 0b0000000,  ///< +/- 4g (default value)
+  LIS3MDL_RANGE_8_GAUSS = 0b0100000,  ///< +/- 8g
+  LIS3MDL_RANGE_12_GAUSS = 0b1000000, ///< +/- 12g
+  LIS3MDL_RANGE_16_GAUSS = 0b1100000, ///< +/- 16g
+} lis3mdl_range_t;
+
+/** The magnetometer data rate, includes FAST_ODR bit */
+typedef enum {
+  LIS3MDL_DATARATE_0_625_HZ = 0b00000, ///<  0.625 Hz
+  LIS3MDL_DATARATE_1_25_HZ = 0b00100,  ///<  1.25 Hz
+  LIS3MDL_DATARATE_2_5_HZ = 0b01000,   ///<  2.5 Hz
+  LIS3MDL_DATARATE_5_HZ = 0b01100,     ///<  5 Hz
+  LIS3MDL_DATARATE_10_HZ = 0b10000,    ///<  10 Hz
+  LIS3MDL_DATARATE_20_HZ = 0b10100,    ///<  20 Hz
+  LIS3MDL_DATARATE_40_HZ = 0b11000,    ///<  40 Hz
+  LIS3MDL_DATARATE_80_HZ = 0b11100,    ///<  80 Hz
+  LIS3MDL_DATARATE_155_HZ = 0b00010,   ///<  155 Hz (FAST_ODR + UHP)
+  LIS3MDL_DATARATE_300_HZ = 0b00110,   ///<  300 Hz (FAST_ODR + HP)
+  LIS3MDL_DATARATE_560_HZ = 0b01010,   ///<  560 Hz (FAST_ODR + MP)
+  LIS3MDL_DATARATE_1000_HZ = 0b01110,  ///<  1000 Hz (FAST_ODR + LP)
+} lis3mdl_dataRate_t;
+
+/** The magnetometer performance mode */
+typedef enum {
+  LIS3MDL_XY_LOWPOWERMODE = 0b0000000,  ///< Low power mode
+  LIS3MDL_XY_MEDIUMMODE = 0b0100000,    ///< Medium performance mode
+  LIS3MDL_XY_HIGHMODE = 0b1000000,      ///< High performance mode
+  LIS3MDL_XY_ULTRAHIGHMODE = 0b1100000, ///< Ultra-high performance mode
+} lis3mdl_XY_performancemode_t;
+
+typedef enum {
+  LIS3MDL_Z_LOWPOWERMODE = 0b0000000,  ///< Low power mode
+  LIS3MDL_Z_MEDIUMMODE = 0b0100000,    ///< Medium performance mode
+  LIS3MDL_Z_HIGHMODE = 0b1000000,      ///< High performance mode
+  LIS3MDL_Z_ULTRAHIGHMODE = 0b1100000, ///< Ultra-high performance mode
+} lis3mdl_Z_performancemode_t;
+
+/** The magnetometer operation mode */
+typedef enum {
+  LIS3MDL_CONTINUOUSMODE = 0b00, ///< Continuous conversion
+  LIS3MDL_SINGLEMODE = 0b01,     ///< Single-shot conversion
+  LIS3MDL_POWERDOWNMODE = 0b11,  ///< Powered-down mode
+} lis3mdl_operationmode_t;
+
+//----------------------------------------------------------
+//
+//  LSM6DSOX
+
+//  I2C Slave Addresses
+#define LSM6DSOX_I2CADDR_DEFAULT 0x6A
+
+//  Register map
+#define LSM6DSOX_WHOAMI 0x0F
+#define LSM6DSOX_WHOAMI_VALUE 0x6C
+
+// Control registers
+#define LSM6DSOX_CTRL1_XL 0x10
+#define LSM6DSOX_CTRL2_G 0x11
+#define LSM6DSOX_CTRL3_C 0x12
+#define LSM6DSOX_CTRL6_C 0x15
+
+// Data registers
+#define LSM6DSOX_STATUS_REG 0x1E
+#define LSM6DSOX_OUTX_L_G 0x22
+#define LSM6DSOX_OUTX_L_A 0x28
+
+/** The ODR (Output Data Rate) */
+typedef enum {
+  LSM6DSOX_ODR_OFF        = 0b00000000,   // Power down
+  LSM6DSOX_ODR_12_5_HZ    = 0b00010000,   // 12.5 Hz (Low Power mode)
+  LSM6DSOX_ODR_26_HZ      = 0b00100000,   // 26 Hz (Low Power mode)
+  LSM6DSOX_ODR_52_HZ      = 0b00110000,   // 52 Hz (Low Power mode)
+  LSM6DSOX_ODR_104_HZ     = 0b01000000,   // 104 Hz (Normal mode)
+  LSM6DSOX_ODR_208_HZ     = 0b01010000,   // 208 Hz (Normal mode)
+  LSM6DSOX_ODR_416_HZ     = 0b01100000,   // 416 Hz (High Performance mode)
+  LSM6DSOX_ODR_833_HZ     = 0b01110000,   // 833 Hz (High Performance mode)
+  LSM6DSOX_ODR_1_66_kHZ   = 0b10000000,   // 1.66 kHz (High Performance mode)
+  LSM6DSOX_ODR_3_33_kHZ   = 0b10010000,   // 3.33 kHz (High Performance mode)
+  LSM6DSOX_ODR_6_66_kHZ   = 0b10100000,   // 6.66 kHz (High Performance mode)
+  LSM6DSOX_ODR_1_6_HZ     = 0b10110000,   // 1.6 Hz (Low Power mode only)
+} lsm6dsox_odr_t;
+
+/** The accelerometer full scale for high performance mode */
+typedef enum {
+  LSM6DSOX_ACCELEROMETER_FULLSCALE_HM0_2G  = 0b0000,   // ±2g
+  LSM6DSOX_ACCELEROMETER_FULLSCALE_HM0_4G  = 0b1000,   // ±4g
+  LSM6DSOX_ACCELEROMETER_FULLSCALE_HM0_8G  = 0b1100,   // ±8g
+  LSM6DSOX_ACCELEROMETER_FULLSCALE_HM0_16G = 0b0100    // ±16g
+} lsm6dsox_accelerometer_fullscale_hm0_t;
+
+/** The accelerometer full scale */
+typedef enum {
+  LSM6DSOX_ACCELEROMETER_FULLSCALE_HM1_2G1 = 0b0000,   // ±2g
+  LSM6DSOX_ACCELEROMETER_FULLSCALE_HM1_4G  = 0b1000,   // ±4g
+  LSM6DSOX_ACCELEROMETER_FULLSCALE_HM1_8G  = 0b1100,   // ±8g
+  LSM6DSOX_ACCELEROMETER_FULLSCALE_HM1_2G2 = 0b0100    // ±2g
+} lsm6dsox_accelerometer_fullscale_hm1_t;
+
+/** The accelerometer high performance mode */
+typedef enum {
+  LSM6DSOX_ACCELEROMETER_MODE_NORMAL            = 0b10000,   // Normal mode
+  LSM6DSOX_ACCELEROMETER_MODE_HIGH_PERFORMANCE  = 0b00000    // High Performance mode
+} lsm6dsox_accelerometer_mode_t;
+
+/** The gyro full scale */
+typedef enum {
+  LSM6DSOX_GYRO_FULLSCALE_125DPS = 0b0010,      // ±125 degrees/s
+  LSM6DSOX_GYRO_FULLSCALE_250DPS = 0b0000,      // ±250 degrees/s
+  LSM6DSOX_GYRO_FULLSCALE_500DPS = 0b0100,      // ±500 degrees/s
+  LSM6DSOX_GYRO_FULLSCALE_1000DPS = 0b1000,     // ±1k degrees/s
+  LSM6DSOX_GYRO_FULLSCALE_2kDPS = 0b1100        // ±2k degrees/s
+} lsm6dsox_gyro_fullscale_t;
+
+/** CTRL3_C increment bit */
+typedef enum {
+  LSM6DSOX_CTRL3_C_INCREMENT_DISABLED = 0b00000000,   // Disable register address auto-increment
+  LSM6DSOX_CTRL3_C_INCREMENT_ENABLED  = 0b00000100    // Enable register address auto-increment
+} lsm6dsox_ctrl3_c_increment_t;
+
+/** CTRL3_C BDU bit */
+typedef enum {
+  LSM6DSOX_CTRL3_C_BDU_DISABLED = 0b00000000,   // Disable BDU
+  LSM6DSOX_CTRL3_C_BDU_ENABLED  = 0b01000000    // Enable BDU
+} lsm6dsox_ctrl3_c_bdu_t;
+
+/** STATUS_REG */
+typedef enum {
+  LSM6DSOX_STATUS_REG_ACCEL_AVAILABLE = 0b00000001,  // Accelerometer data is available
+  LSM6DSOX_STATUS_REG_GYRO_AVAILABLE = 0b00000010,   // Gyroscope data is available
+  LSM6DSOX_STATUS_REG_TEMPERATURE_AVAILABLE = 0b00000100 // Temperature data is available
+} lsm6dsox_status_reg_t;
 
 #endif // _RTIMUDEFS_H
