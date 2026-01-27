@@ -1275,4 +1275,12 @@ typedef enum {
   LSM6DSOX_STATUS_REG_TEMPERATURE_AVAILABLE = 0b00000100 // Temperature data is available
 } lsm6dsox_status_reg_t;
 
+//----------------------------------------------------------
+//
+//  LIS3MDL
+
+#define LIS3MDL_ADDRESS              0x1C
+#define LIS3MDL_WHO_AM_I            0x0F
+#define LIS3MDL_ID                  0x3D
+
 #endif // _RTIMUDEFS_H

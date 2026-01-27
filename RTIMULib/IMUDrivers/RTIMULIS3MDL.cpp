@@ -16,15 +16,15 @@ bool RTIMULIS3MDL::IMUInit()
     
     // Verify communication
     if (!m_settings->m_I2CSlaveAddress)
-        m_settings->m_I2CSlaveAddress = NEWBOARD_ADDRESS; // default address
+        m_settings->m_I2CSlaveAddress = LIS3MDL_I2CADDR_DEFAULT; // default address
     
     m_slaveAddr = m_settings->m_I2CSlaveAddress;
     
     // Check WHO_AM_I register
-    if (!m_hal->I2CRead(m_slaveAddr, NEWBOARD_WHOAMI_REG, 1, &whoami))
+    if (!(m_settings->HALRead(m_slaveAddr, LIS3MDL_REG_WHO_AM_I, 1, &whoami, "Failed to read LIS3MDL WHO_AM_I register")))
         return false;
         
-    if (whoami != NEWBOARD_WHOAMI_VALUE)
+    if (whoami != LIS3MDL_REG_EXPECTED_ID)
         return false;
     
     // Initialize sensors
