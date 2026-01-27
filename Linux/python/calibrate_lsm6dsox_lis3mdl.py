@@ -11,10 +11,7 @@ SETTINGS_FILE = "RTIMULib_LSM6DSOX_LIS3MDL"
 # Create settings
 s = RTIMU.Settings(SETTINGS_FILE)
 
-# Set IMU type to our new combined sensor
-s.m_imuType = 13  # RTIMU_TYPE_LSM6DSOX_LIS3MDL
-
-# Create IMU
+# Create IMU (it will use auto-discovery or the settings file to detect the type)
 imu = RTIMU.RTIMU(s)
 
 print("IMU Name: " + imu.IMUName())

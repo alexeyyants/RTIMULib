@@ -28,34 +28,68 @@ bool RTIMULSM6DSOXandLIS3MDL::IMUInit()
     m_lsm6dsoxAddr = LSM6DSOX_I2CADDR_DEFAULT;
     m_lis3mdlAddr = LIS3MDL_I2CADDR_DEFAULT;
 
+    HAL_INFO("LSM6DSOX address: 0x%02x\n", m_lsm6dsoxAddr);
+    HAL_INFO("LIS3MDL address: 0x%02x\n", m_lis3mdlAddr);
+
     setCalibrationData();  // Load calibration data from settings
+    HAL_INFO("Calibration data loaded\n");
 
     // Enable I2C bus
+    HAL_INFO("Opening HAL...\n");
     if (!m_settings->HALOpen())
+    {
+        HAL_ERROR("Failed to open HAL\n");
         return false;
+    }
+    HAL_INFO("HAL opened successfully\n");
 
     // Initialize LSM6DSOX (gyro + accel)
+    HAL_INFO("Reading LSM6DSOX WHOAMI...\n");
     if (!m_settings->HALRead(m_lsm6dsoxAddr, LSM6DSOX_WHOAMI, 1, &result, "Failed to read LSM6DSOX WHOAMI"))
-        return false;
-    if (result != LSM6DSOX_WHOAMI_VALUE) {
-        HAL_ERROR1("Incorrect LSM6DSOX id %d\n", result);
+    {
+        HAL_ERROR("Could not read LSM6DSOX WHOAMI register\n");
         return false;
     }
-
-    if (!setLSM6DSOXConfig())
+    HAL_INFO("LSM6DSOX WHOAMI result: 0x%02x (expected 0x%02x)\n", result, LSM6DSOX_WHOAMI_VALUE);
+    
+    if (result != LSM6DSOX_WHOAMI_VALUE) {
+        HAL_ERROR1("Incorrect LSM6DSOX id: got 0x%02x\n", result);
         return false;
+    }
+    HAL_INFO("LSM6DSOX verified\n");
+
+    HAL_INFO("Configuring LSM6DSOX...\n");
+    if (!setLSM6DSOXConfig())
+    {
+        HAL_ERROR("Failed to configure LSM6DSOX\n");
+        return false;
+    }
+    HAL_INFO("LSM6DSOX configured\n");
 
     // Initialize LIS3MDL (magnetometer)
+    HAL_INFO("Reading LIS3MDL WHOAMI...\n");
     if (!m_settings->HALRead(m_lis3mdlAddr, LIS3MDL_REG_WHO_AM_I, 1, &result, "Failed to read LIS3MDL WHOAMI"))
-        return false;
-    if (result != LIS3MDL_REG_WHO_AM_I_VALUE) {
-        HAL_ERROR1("Incorrect LIS3MDL id %d\n", result);
+    {
+        HAL_ERROR("Could not read LIS3MDL WHOAMI register\n");
         return false;
     }
-
-    if (!setLIS3MDLConfig())
+    HAL_INFO("LIS3MDL WHOAMI result: 0x%02x (expected 0x%02x)\n", result, LIS3MDL_REG_WHO_AM_I_VALUE);
+    
+    if (result != LIS3MDL_REG_WHO_AM_I_VALUE) {
+        HAL_ERROR1("Incorrect LIS3MDL id: got 0x%02x\n", result);
         return false;
+    }
+    HAL_INFO("LIS3MDL verified\n");
 
+    HAL_INFO("Configuring LIS3MDL...\n");
+    if (!setLIS3MDLConfig())
+    {
+        HAL_ERROR("Failed to configure LIS3MDL\n");
+        return false;
+    }
+    HAL_INFO("LIS3MDL configured\n");
+
+    HAL_INFO("Initializing gyro bias...\n");
     gyroBiasInit();
     HAL_INFO("LSM6DSOX+LIS3MDL init complete\n");
     return true;
@@ -65,23 +99,38 @@ bool RTIMULSM6DSOXandLIS3MDL::setLSM6DSOXConfig()
 {
     // in order to disable accelerometer high performance mode, CTRL6_C bit 5 must be set to 1
 
+    HAL_INFO("  Setting LSM6DSOX CTRL3_C...\n");
     unsigned char ctrl3_c = LSM6DSOX_CTRL3_C_BDU_ENABLED | LSM6DSOX_CTRL3_C_INCREMENT_ENABLED;  // I2C enable, BDU on
     if (!m_settings->HALWrite(m_lsm6dsoxAddr, LSM6DSOX_CTRL3_C, ctrl3_c, "Failed to set LSM6DSOX CTRL3_C"))
+    {
+        HAL_ERROR("Failed to write CTRL3_C\n");
         return false;
+    }
+    HAL_INFO("  CTRL3_C set successfully (0x%02x)\n", ctrl3_c);
 
     // Set accel: ±2G, 104 Hz (adapt ranges/data rates as needed)
+    HAL_INFO("  Setting LSM6DSOX CTRL1_XL...\n");
     unsigned char lsm6dsox_odr = LSM6DSOX_ODR_104_HZ;
     updateGyroSampleRate(lsm6dsox_odr);
     unsigned char ctrl1_xl = LSM6DSOX_ACCELEROMETER_FULLSCALE_HM0_2G | lsm6dsox_odr;  // 104 Hz, ±2G
     m_accelScale = 2.0 / 32768.0;  // Scale for ±2G
     if (!m_settings->HALWrite(m_lsm6dsoxAddr, LSM6DSOX_CTRL1_XL, ctrl1_xl, "Failed to set LSM6DSOX CTRL1_XL"))
+    {
+        HAL_ERROR("Failed to write CTRL1_XL\n");
         return false;
+    }
+    HAL_INFO("  CTRL1_XL set successfully (0x%02x)\n", ctrl1_xl);
 
     // Set gyro: ±250 DPS, 104 Hz
+    HAL_INFO("  Setting LSM6DSOX CTRL2_G...\n");
     unsigned char ctrl2_g = LSM6DSOX_GYRO_FULLSCALE_250DPS | lsm6dsox_odr;  // Example: 104 Hz, ±250 DPS
     m_gyroScale = (250.0 * RTMATH_DEGREE_TO_RAD) / 32768.0;  // Scale for ±250 DPS
     if (!m_settings->HALWrite(m_lsm6dsoxAddr, LSM6DSOX_CTRL2_G, ctrl2_g, "Failed to set LSM6DSOX CTRL2_G"))
+    {
+        HAL_ERROR("Failed to write CTRL2_G\n");
         return false;
+    }
+    HAL_INFO("  CTRL2_G set successfully (0x%02x)\n", ctrl2_g);
 
     return true;
 }
@@ -89,22 +138,42 @@ bool RTIMULSM6DSOXandLIS3MDL::setLSM6DSOXConfig()
 bool RTIMULSM6DSOXandLIS3MDL::setLIS3MDLConfig()
 {
 
+    HAL_INFO("  Setting LIS3MDL CTRL_REG1...\n");
     unsigned char ctrl1 = LIS3MDL_DATARATE_80_HZ | LIS3MDL_XY_MEDIUMMODE;  // 80 Hz, Medium performance
     if (!m_settings->HALWrite(m_lis3mdlAddr, LIS3MDL_REG_CTRL_REG1, ctrl1, "Failed to set LIS3MDL CTRL_REG1"))
+    {
+        HAL_ERROR("Failed to write CTRL_REG1\n");
         return false;
+    }
+    HAL_INFO("  CTRL_REG1 set successfully (0x%02x)\n", ctrl1);
 
+    HAL_INFO("  Setting LIS3MDL CTRL_REG2...\n");
     unsigned char ctrl2 = LIS3MDL_RANGE_4_GAUSS;  // ±4 Gauss (default)
     m_compassScale = 4.0 / 32768.0;  // Gauss to Gauss scale (convert to µT later)
     if (!m_settings->HALWrite(m_lis3mdlAddr, LIS3MDL_REG_CTRL_REG2, ctrl2, "Failed to set LIS3MDL CTRL_REG2"))
+    {
+        HAL_ERROR("Failed to write CTRL_REG2\n");
         return false;
+    }
+    HAL_INFO("  CTRL_REG2 set successfully (0x%02x)\n", ctrl2);
 
+    HAL_INFO("  Setting LIS3MDL CTRL_REG3...\n");
     unsigned char ctrl3 = LIS3MDL_CONTINUOUSMODE;  // Continuous mode
     if (!m_settings->HALWrite(m_lis3mdlAddr, LIS3MDL_REG_CTRL_REG3, ctrl3, "Failed to set LIS3MDL CTRL_REG3"))
+    {
+        HAL_ERROR("Failed to write CTRL_REG3\n");
         return false;
+    }
+    HAL_INFO("  CTRL_REG3 set successfully (0x%02x)\n", ctrl3);
 
+    HAL_INFO("  Setting LIS3MDL CTRL_REG4...\n");
     unsigned char ctrl4 = LIS3MDL_Z_MEDIUMMODE;  // Medium performance for Z
     if (!m_settings->HALWrite(m_lis3mdlAddr, LIS3MDL_REG_CTRL_REG4, ctrl4, "Failed to set LIS3MDL CTRL_REG4"))
+    {
+        HAL_ERROR("Failed to write CTRL_REG4\n");
         return false;
+    }
+    HAL_INFO("  CTRL_REG4 set successfully (0x%02x)\n", ctrl4);
 
     return true;
 }
