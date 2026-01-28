@@ -234,19 +234,36 @@ bool RTIMULSM6DSOXandLIS3MDL::IMURead()
     unsigned char gyroAccelData[12];  // Gyro (6) + Accel (6)
     unsigned char compassData[6];
 
+    HAL_INFO("IMURead called\n");
+
     // Check LSM6DSOX status
     if (!m_settings->HALRead(m_lsm6dsoxAddr, LSM6DSOX_STATUS_REG, 1, &status, "Failed to read LSM6DSOX status"))
         return false;
+    HAL_INFO1("LSM6DSOX status: 0x%02x\n", status);
     if ((status & 0x03) == 0)  // Check if gyro and accel data ready
+    {
+        HAL_INFO("LSM6DSOX data not ready\n");
         return false;
+    }
+    HAL_INFO("LSM6DSOX data ready\n");
 
     // Read gyro and accel data
     if (!m_settings->HALRead(m_lsm6dsoxAddr, 0x80 | LSM6DSOX_OUTX_L_G, 12, gyroAccelData, "Failed to read LSM6DSOX data"))
         return false;
+    HAL_INFO("Raw LSM6DSOX data: ");
+    for (int i = 0; i < 12; i++) {
+        HAL_INFO1("%02x ", gyroAccelData[i]);
+    }
+    HAL_INFO("\n");
 
     // Read compass data from LIS3MDL
     if (!m_settings->HALRead(m_lis3mdlAddr, 0x80 | LIS3MDL_REG_OUT_X_L, 6, compassData, "Failed to read LIS3MDL data"))
         return false;
+    HAL_INFO("Raw LIS3MDL data: ");
+    for (int i = 0; i < 6; i++) {
+        HAL_INFO1("%02x ", compassData[i]);
+    }
+    HAL_INFO("\n");
 
     m_imuData.timestamp = RTMath::currentUSecsSinceEpoch();
 
@@ -254,10 +271,15 @@ bool RTIMULSM6DSOXandLIS3MDL::IMURead()
     RTMath::convertToVector(gyroAccelData, m_imuData.gyro, m_gyroScale, false);
     RTMath::convertToVector(gyroAccelData + 6, m_imuData.accel, m_accelScale, false);
 
+    HAL_INFO3("Converted accel: %.3f, %.3f, %.3f\n", m_imuData.accel.x(), m_imuData.accel.y(), m_imuData.accel.z());
+    HAL_INFO3("Converted gyro: %.3f, %.3f, %.3f\n", m_imuData.gyro.x(), m_imuData.gyro.y(), m_imuData.gyro.z());
+
     // Convert compass (to µT)
     m_imuData.compass.setX((RTFLOAT)((int16_t)((compassData[1] << 8) | compassData[0])) * m_compassScale * 100.0);
     m_imuData.compass.setY((RTFLOAT)((int16_t)((compassData[3] << 8) | compassData[2])) * m_compassScale * 100.0);
     m_imuData.compass.setZ((RTFLOAT)((int16_t)((compassData[5] << 8) | compassData[4])) * m_compassScale * 100.0);
+
+    HAL_INFO3("Converted compass: %.3f, %.3f, %.3f\n", m_imuData.compass.x(), m_imuData.compass.y(), m_imuData.compass.z());
 
     // Apply axis corrections if needed (based on board orientation)
 
