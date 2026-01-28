@@ -5,14 +5,22 @@
 RTIMULSM6DSOXandLIS3MDL::RTIMULSM6DSOXandLIS3MDL(RTIMUSettings *settings) : RTIMU(settings)
 {
     m_sampleRate = 104;  // Default to 104 Hz, adjust based on config
+    
+    // Write directly to stderr to test output
+    fprintf(stderr, "\n=== RTIMULSM6DSOXandLIS3MDL CONSTRUCTOR CALLED ===\n");
+    fflush(stderr);
 }
 
 RTIMULSM6DSOXandLIS3MDL::~RTIMULSM6DSOXandLIS3MDL()
 {
+    fprintf(stderr, "\n=== RTIMULSM6DSOXandLIS3MDL DESTRUCTOR CALLED ===\n");
+    fflush(stderr);
 }
 
 bool RTIMULSM6DSOXandLIS3MDL::IMUInit()
 {
+    fprintf(stderr, "\n=== RTIMULSM6DSOXandLIS3MDL IMUInit CALLED ===\n");
+    fflush(stderr);
     unsigned char result;
 
     // Set validity flags
