@@ -7,20 +7,17 @@ RTIMULSM6DSOXandLIS3MDL::RTIMULSM6DSOXandLIS3MDL(RTIMUSettings *settings) : RTIM
     m_sampleRate = 104;  // Default to 104 Hz, adjust based on config
     
     // Write directly to stderr to test output
-    fprintf(stderr, "\n=== RTIMULSM6DSOXandLIS3MDL CONSTRUCTOR CALLED ===\n");
-    fflush(stderr);
+    HAL_INFO("\n=== RTIMULSM6DSOXandLIS3MDL CONSTRUCTOR CALLED ===\n");
 }
 
 RTIMULSM6DSOXandLIS3MDL::~RTIMULSM6DSOXandLIS3MDL()
 {
-    fprintf(stderr, "\n=== RTIMULSM6DSOXandLIS3MDL DESTRUCTOR CALLED ===\n");
-    fflush(stderr);
+    HAL_INFO("\n=== RTIMULSM6DSOXandLIS3MDL DESTRUCTOR CALLED ===\n");
 }
 
 bool RTIMULSM6DSOXandLIS3MDL::IMUInit()
 {
-    fprintf(stderr, "\n=== RTIMULSM6DSOXandLIS3MDL IMUInit CALLED ===\n");
-    fflush(stderr);
+    HAL_INFO("\n=== RTIMULSM6DSOXandLIS3MDL IMUInit CALLED ===\n");
     unsigned char result;
 
     // Set validity flags
@@ -39,11 +36,9 @@ bool RTIMULSM6DSOXandLIS3MDL::IMUInit()
 
     HAL_INFO1("LSM6DSOX address: 0x%02x\n", m_lsm6dsoxAddr);
     HAL_INFO1("LIS3MDL address: 0x%02x\n", m_lis3mdlAddr);
-    fflush(stdout);
 
     setCalibrationData();  // Load calibration data from settings
     HAL_INFO("Calibration data loaded\n");
-    fflush(stdout);
 
     // Enable I2C bus
     HAL_INFO("Opening HAL...\n");
