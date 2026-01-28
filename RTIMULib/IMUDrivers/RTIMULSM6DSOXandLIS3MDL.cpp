@@ -296,3 +296,105 @@ int RTIMULSM6DSOXandLIS3MDL::IMUGetPollInterval()
 {
     return 1000 / m_sampleRate;  // e.g., ~10ms for 100 Hz
 }
+
+// Read back the control registers that we set during configuration
+void RTIMULSM6DSOXandLIS3MDL::verifyConfigs()
+{
+    unsigned char val;
+
+    HAL_INFO("Verifying LSM6DSOX registers...\n");
+    if (!m_settings->HALRead(m_lsm6dsoxAddr, LSM6DSOX_CTRL3_C, 1, &val, "Failed to read LSM6DSOX CTRL3_C"))
+    {
+        HAL_ERROR("Failed to read LSM6DSOX CTRL3_C\n");
+    }
+    else
+    {
+        HAL_INFO1("  CTRL3_C = 0x%02x\n", val);
+    }
+
+    if (!m_settings->HALRead(m_lsm6dsoxAddr, LSM6DSOX_CTRL1_XL, 1, &val, "Failed to read LSM6DSOX CTRL1_XL"))
+    {
+        HAL_ERROR("Failed to read LSM6DSOX CTRL1_XL\n");
+    }
+    else
+        HAL_INFO1("  CTRL1_XL = 0x%02x\n", val);
+
+    if (!m_settings->HALRead(m_lsm6dsoxAddr, LSM6DSOX_CTRL2_G, 1, &val, "Failed to read LSM6DSOX CTRL2_G"))
+    {
+        HAL_ERROR("Failed to read LSM6DSOX CTRL2_G\n");
+    }
+    else
+    {
+        HAL_INFO1("  CTRL2_G = 0x%02x\n", val);
+    }
+
+    HAL_INFO("Verifying LIS3MDL registers...\n");
+    if (!m_settings->HALRead(m_lis3mdlAddr, LIS3MDL_REG_CTRL_REG1, 1, &val, "Failed to read LIS3MDL CTRL_REG1"))
+    {
+        HAL_ERROR("Failed to read LIS3MDL CTRL_REG1\n");
+    }
+    else
+    {
+        HAL_INFO1("  CTRL_REG1 = 0x%02x\n", val);
+    }
+
+    if (!m_settings->HALRead(m_lis3mdlAddr, LIS3MDL_REG_CTRL_REG2, 1, &val, "Failed to read LIS3MDL CTRL_REG2"))
+    {
+        HAL_ERROR("Failed to read LIS3MDL CTRL_REG2\n");
+    }
+    else
+    {
+        HAL_INFO1("  CTRL_REG2 = 0x%02x\n", val);
+    }
+
+    if (!m_settings->HALRead(m_lis3mdlAddr, LIS3MDL_REG_CTRL_REG3, 1, &val, "Failed to read LIS3MDL CTRL_REG3"))
+    {
+        HAL_ERROR("Failed to read LIS3MDL CTRL_REG3\n");
+    }
+    else
+    {
+        HAL_INFO1("  CTRL_REG3 = 0x%02x\n", val);
+    }
+
+    if (!m_settings->HALRead(m_lis3mdlAddr, LIS3MDL_REG_CTRL_REG4, 1, &val, "Failed to read LIS3MDL CTRL_REG4"))
+    {
+        HAL_ERROR("Failed to read LIS3MDL CTRL_REG4\n");
+    }
+    else
+    {
+        HAL_INFO1("  CTRL_REG4 = 0x%02x\n", val);
+    }
+}
+
+// Dump raw data registers as a single-line: "<LSM6DSOX regs | LIS3MDL regs>"
+void RTIMULSM6DSOXandLIS3MDL::dumpRawData()
+{
+    unsigned char buf[12];
+    unsigned char mag[6];
+
+    bool ok1 = m_settings->HALRead(m_lsm6dsoxAddr, 0x80 | LSM6DSOX_OUTX_L_G, 12, buf, "Failed to read LSM6DSOX data");
+    bool ok2 = m_settings->HALRead(m_lis3mdlAddr, 0x80 | LIS3MDL_REG_OUT_X_L, 6, mag, "Failed to read LIS3MDL data");
+
+    HAL_INFO("<");
+    if (ok1) {
+        HAL_INFO("LSM6DSOX regs ");
+        for (int i = 0; i < 12; i++) {
+            HAL_INFO1("%02x ", buf[i]);
+        }
+    } else {
+        HAL_INFO("LSM6DSOX read-fail ");
+    }
+
+    HAL_INFO("| ");
+
+    if (ok2) {
+        HAL_INFO("LIS3MDL regs ");
+        for (int i = 0; i < 6; i++) {
+            HAL_INFO1("%02x ", mag[i]);
+        }
+    } else {
+        HAL_INFO("LIS3MDL read-fail ");
+    }
+
+    HAL_INFO(">\n");
+}

@@ -15,6 +15,10 @@ public:
     virtual bool IMUInit();
     virtual bool IMURead();
     virtual int IMUGetPollInterval();
+    // Read back control registers for verification after init
+    void verifyConfigs();
+    // Dump raw sensor data registers (single-line output)
+    void dumpRawData();
 
 private:
     // Private methods for setup
