@@ -1,5 +1,6 @@
 #include "RTIMULSM6DSOXandLIS3MDL.h"
 #include "RTIMUSettings.h"
+#include <stdio.h>
 
 RTIMULSM6DSOXandLIS3MDL::RTIMULSM6DSOXandLIS3MDL(RTIMUSettings *settings) : RTIMU(settings)
 {
@@ -30,9 +31,11 @@ bool RTIMULSM6DSOXandLIS3MDL::IMUInit()
 
     HAL_INFO1("LSM6DSOX address: 0x%02x\n", m_lsm6dsoxAddr);
     HAL_INFO1("LIS3MDL address: 0x%02x\n", m_lis3mdlAddr);
+    fflush(stdout);
 
     setCalibrationData();  // Load calibration data from settings
     HAL_INFO("Calibration data loaded\n");
+    fflush(stdout);
 
     // Enable I2C bus
     HAL_INFO("Opening HAL...\n");
