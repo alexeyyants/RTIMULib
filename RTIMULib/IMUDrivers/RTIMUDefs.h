@@ -1207,7 +1207,17 @@ typedef enum {
 // Data registers
 #define LSM6DSOX_STATUS_REG 0x1E
 #define LSM6DSOX_OUTX_L_G 0x22
+#define LSM6DSOX_OUTX_H_G 0x23
+#define LSM6DSOX_OUTY_L_G 0x24
+#define LSM6DSOX_OUTY_H_G 0x25
+#define LSM6DSOX_OUTZ_L_G 0x26
+#define LSM6DSOX_OUTZ_H_G 0x27
 #define LSM6DSOX_OUTX_L_A 0x28
+#define LSM6DSOX_OUTX_H_A 0x29
+#define LSM6DSOX_OUTY_L_A 0x2A
+#define LSM6DSOX_OUTY_H_A 0x2B
+#define LSM6DSOX_OUTZ_L_A 0x2C
+#define LSM6DSOX_OUTZ_H_A 0x2D
 
 /** The ODR (Output Data Rate) */
 typedef enum {
