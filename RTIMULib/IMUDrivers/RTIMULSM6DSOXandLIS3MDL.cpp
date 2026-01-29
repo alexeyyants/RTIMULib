@@ -372,7 +372,17 @@ void RTIMULSM6DSOXandLIS3MDL::dumpRawData()
     unsigned char buf[12];
     unsigned char mag[6];
 
-    bool ok1 = m_settings->HALRead(m_lsm6dsoxAddr, 0x80 | LSM6DSOX_OUTX_L_G, 12, buf, "Failed to read LSM6DSOX data");
+    // Read LSM6DSOX data byte-by-byte (0x22-0x2D: gyro 0x22-0x27, accel 0x28-0x2D)
+    bool ok1 = true;
+    for (int i = 0; i < 12; i++) {
+        unsigned char regAddr = LSM6DSOX_OUTX_L_G + i;
+        if (!m_settings->HALRead(m_lsm6dsoxAddr, regAddr, 1, &buf[i], "Failed to read LSM6DSOX byte")) {
+            ok1 = false;
+            break;
+        }
+    }
+
+    // Read LIS3MDL data (multi-byte)
     bool ok2 = m_settings->HALRead(m_lis3mdlAddr, 0x80 | LIS3MDL_REG_OUT_X_L, 6, mag, "Failed to read LIS3MDL data");
 
     HAL_INFO("<");
