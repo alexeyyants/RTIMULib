@@ -29,6 +29,7 @@
 #if !defined(WIN32) && !defined(__APPLE__)
 
 #include <linux/spi/spidev.h>
+#include <linux/i2c.h>
 
 RTIMUHal::RTIMUHal()
 {
@@ -218,34 +219,61 @@ bool RTIMUHal::HALRead(unsigned char slaveAddr, unsigned char regAddr, unsigned 
     struct spi_ioc_transfer rdIOC;
 
     if (m_busIsI2C) {
-        if (!HALWrite(slaveAddr, regAddr, 0, NULL, errorMsg))
+        // Try to perform a combined write(register) + read(data) using I2C_RDWR
+        // This issues a repeated-start which many devices require for multi-byte reads.
+        if (!I2CSelectSlave(slaveAddr, errorMsg))
             return false;
 
-        total = 0;
-        tries = 0;
+        struct i2c_rdwr_ioctl_data rdwr;
+        struct i2c_msg msgs[2];
+        unsigned char outBuf[1];
 
-        while ((total < length) && (tries < 5)) {
-            result = read(m_I2C, data + total, length - total);
+        outBuf[0] = regAddr;
 
-            if (result < 0) {
-                if (strlen(errorMsg) > 0)
-                    HAL_ERROR3("I2C read error from %d, %d - %s\n", slaveAddr, regAddr, errorMsg);
+        msgs[0].addr = slaveAddr;
+        msgs[0].flags = 0; // write
+        msgs[0].len = 1;
+        msgs[0].buf = outBuf;
+
+        msgs[1].addr = slaveAddr;
+        msgs[1].flags = I2C_M_RD; // read
+        msgs[1].len = length;
+        msgs[1].buf = data;
+
+        rdwr.msgs = msgs;
+        rdwr.nmsgs = 2;
+
+        if (ioctl(m_I2C, I2C_RDWR, &rdwr) < 0) {
+            // Fallback to write-then-read if ioctl not supported by adapter
+            if (!HALWrite(slaveAddr, regAddr, 0, NULL, errorMsg))
                 return false;
+
+            total = 0;
+            tries = 0;
+
+            while ((total < length) && (tries < 5)) {
+                result = read(m_I2C, data + total, length - total);
+
+                if (result < 0) {
+                    if (strlen(errorMsg) > 0)
+                        HAL_ERROR3("I2C read error from %d, %d - %s\n", slaveAddr, regAddr, errorMsg);
+                    return false;
+                }
+
+                total += result;
+
+                if (total == length)
+                    break;
+
+                delayMs(10);
+                tries++;
             }
 
-            total += result;
-
-            if (total == length)
-                break;
-
-            delayMs(10);
-            tries++;
-        }
-
-        if (total < length) {
-            if (strlen(errorMsg) > 0)
-                HAL_ERROR3("I2C read from %d, %d failed - %s\n", slaveAddr, regAddr, errorMsg);
-            return false;
+            if (total < length) {
+                if (strlen(errorMsg) > 0)
+                    HAL_ERROR3("I2C read from %d, %d failed - %s\n", slaveAddr, regAddr, errorMsg);
+                return false;
+            }
         }
     } else {
         rxBuff[0] = regAddr | 0x80;
