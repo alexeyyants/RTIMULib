@@ -25,6 +25,16 @@ private:
     bool setLSM6DSOXConfig();
     bool setLIS3MDLConfig();
     void updateGyroSampleRate(unsigned char lsm6dsox_odr, bool low_power_mode = false);
+    // Helpers to map settings values to register bits and scales
+    unsigned char mapLSM6DSOXSampleRateToODR(int sampleRate);
+    void mapLSM6DSOXAccelFsrToBitsAndScale(int accelFsr, unsigned char &bits, RTFLOAT &scale);
+    void mapLSM6DSOXGyroFsrToBitsAndScale(int gyroFsr, unsigned char &bits, RTFLOAT &scale);
+
+    unsigned char mapLIS3MDLDataRateToBits(int dataRate);
+    unsigned char mapLIS3MDLXYPerfToBits(int xyPerf);
+    unsigned char mapLIS3MDLZPerfToBits(int zPerf);
+    void mapLIS3MDLRangeToBitsAndScale(int range, unsigned char &bits, RTFLOAT &scale);
+    unsigned char mapLIS3MDLOpModeToBits(int opMode);
 
     // Member variables
     unsigned char m_lsm6dsoxAddr;  // I2C address for LSM6DSOX

@@ -600,6 +600,19 @@ void RTIMUSettings::setDefaults()
     m_BMX055AccelFsr = BMX055_ACCEL_FSR_8;
 
     m_BMX055MagPreset = BMX055_MAG_REGULAR;
+
+    // LSM6DSOX settings - using defines from RTIMUDefs.h defaults
+    m_LSM6DSOXGyroSampleRate = LSM6DSOX_DEFAULT_SAMPLE_RATE;
+    m_LSM6DSOXGyroFsr = LSM6DSOX_DEFAULT_GYRO_FULLSCALE;
+    m_LSM6DSOXAccelSampleRate = LSM6DSOX_DEFAULT_SAMPLE_RATE;
+    m_LSM6DSOXAccelFsr = LSM6DSOX_DEFAULT_ACCEL_FULLSCALE;
+
+    // LIS3MDL settings - using defines from RTIMUDefs.h defaults
+    m_LIS3MDLCompassSampleRate = LIS3MDL_DEFAULT_DATARATE;
+    m_LIS3MDLCompassFsr = LIS3MDL_DEFAULT_RANGE;
+    m_LIS3MDLXYPerformance = LIS3MDL_DEFAULT_XY_PERFORMANCE;
+    m_LIS3MDLZPerformance = LIS3MDL_DEFAULT_Z_PERFORMANCE;
+    m_LIS3MDLOperationMode = LIS3MDL_DEFAULT_MODE;
 }
 
 bool RTIMUSettings::loadSettings()
@@ -904,6 +917,30 @@ bool RTIMUSettings::loadSettings()
             m_BMX055AccelFsr = atoi(val);
         } else if (strcmp(key, RTIMULIB_BMX055_MAG_PRESET) == 0) {
             m_BMX055MagPreset = atoi(val);
+
+        //  LSM6DSOX settings
+
+        } else if (strcmp(key, RTIMULIB_LSM6DSOX_GYRO_SAMPLERATE) == 0) {
+            m_LSM6DSOXGyroSampleRate = atoi(val);
+        } else if (strcmp(key, RTIMULIB_LSM6DSOX_GYRO_FSR) == 0) {
+            m_LSM6DSOXGyroFsr = atoi(val);
+        } else if (strcmp(key, RTIMULIB_LSM6DSOX_ACCEL_SAMPLERATE) == 0) {
+            m_LSM6DSOXAccelSampleRate = atoi(val);
+        } else if (strcmp(key, RTIMULIB_LSM6DSOX_ACCEL_FSR) == 0) {
+            m_LSM6DSOXAccelFsr = atoi(val);
+
+        //  LIS3MDL settings
+
+        } else if (strcmp(key, RTIMULIB_LIS3MDL_COMPASS_SAMPLERATE) == 0) {
+            m_LIS3MDLCompassSampleRate = atoi(val);
+        } else if (strcmp(key, RTIMULIB_LIS3MDL_COMPASS_FSR) == 0) {
+            m_LIS3MDLCompassFsr = atoi(val);
+        } else if (strcmp(key, RTIMULIB_LIS3MDL_XY_PERFORMANCE) == 0) {
+            m_LIS3MDLXYPerformance = atoi(val);
+        } else if (strcmp(key, RTIMULIB_LIS3MDL_Z_PERFORMANCE) == 0) {
+            m_LIS3MDLZPerformance = atoi(val);
+        } else if (strcmp(key, RTIMULIB_LIS3MDL_OPERATION_MODE) == 0) {
+            m_LIS3MDLOperationMode = atoi(val);
 
         //  Handle unrecognized key
 
@@ -1701,6 +1738,30 @@ bool RTIMUSettings::saveSettings()
     setComment("  2 = Enhanced");
     setComment("  3 = High accuracy");
     setValue(RTIMULIB_BMX055_MAG_PRESET, m_BMX055MagPreset);
+
+    setBlank();
+    setComment("LSM6DSOX settings");
+    setComment("Gyro sample rate (Hz)");
+    setValue(RTIMULIB_LSM6DSOX_GYRO_SAMPLERATE, m_LSM6DSOXGyroSampleRate);
+    setComment("Gyro full scale range");
+    setValue(RTIMULIB_LSM6DSOX_GYRO_FSR, m_LSM6DSOXGyroFsr);
+    setComment("Accel sample rate (Hz)");
+    setValue(RTIMULIB_LSM6DSOX_ACCEL_SAMPLERATE, m_LSM6DSOXAccelSampleRate);
+    setComment("Accel full scale range");
+    setValue(RTIMULIB_LSM6DSOX_ACCEL_FSR, m_LSM6DSOXAccelFsr);
+
+    setBlank();
+    setComment("LIS3MDL settings");
+    setComment("Compass sample rate (Hz)");
+    setValue(RTIMULIB_LIS3MDL_COMPASS_SAMPLERATE, m_LIS3MDLCompassSampleRate);
+    setComment("Compass full scale range (Gauss)");
+    setValue(RTIMULIB_LIS3MDL_COMPASS_FSR, m_LIS3MDLCompassFsr);
+    setComment("XY Performance mode - 0=Low, 1=Medium, 2=High, 3=UltraHigh");
+    setValue(RTIMULIB_LIS3MDL_XY_PERFORMANCE, m_LIS3MDLXYPerformance);
+    setComment("Z Performance mode - 0=Low, 1=Medium, 2=High, 3=UltraHigh");
+    setValue(RTIMULIB_LIS3MDL_Z_PERFORMANCE, m_LIS3MDLZPerformance);
+    setComment("Operation mode - 0=Continuous, 1=Single-shot, 3=Power-down");
+    setValue(RTIMULIB_LIS3MDL_OPERATION_MODE, m_LIS3MDLOperationMode);
 
     fclose(m_fd);
     return true;

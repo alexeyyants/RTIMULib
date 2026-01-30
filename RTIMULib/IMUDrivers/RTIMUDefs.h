@@ -1182,9 +1182,9 @@ typedef enum {
 
 /** The magnetometer operation mode */
 typedef enum {
-  LIS3MDL_CONTINUOUSMODE = 0b00, ///< Continuous conversion
-  LIS3MDL_SINGLEMODE = 0b01,     ///< Single-shot conversion
-  LIS3MDL_POWERDOWNMODE = 0b11,  ///< Powered-down mode
+  LIS3MDL_CONTINUOUSMODE = 0b00,  ///< Continuous conversion
+  LIS3MDL_SINGLESHOTMODE = 0b01,  ///< Single-shot conversion
+  LIS3MDL_POWERDOWNMODE = 0b11,   ///< Powered-down mode
 } lis3mdl_operationmode_t;
 
 //----------------------------------------------------------
@@ -1269,7 +1269,7 @@ typedef enum {
   LSM6DSOX_GYRO_FULLSCALE_250DPS = 0b0000,      // ±250 degrees/s
   LSM6DSOX_GYRO_FULLSCALE_500DPS = 0b0100,      // ±500 degrees/s
   LSM6DSOX_GYRO_FULLSCALE_1000DPS = 0b1000,     // ±1k degrees/s
-  LSM6DSOX_GYRO_FULLSCALE_2kDPS = 0b1100        // ±2k degrees/s
+  LSM6DSOX_GYRO_FULLSCALE_2000DPS = 0b1100      // ±2k degrees/s
 } lsm6dsox_gyro_fullscale_t;
 
 /** CTRL3_C increment bit */
@@ -1298,5 +1298,17 @@ typedef enum {
 #define LIS3MDL_ADDRESS              0x1C
 #define LIS3MDL_WHO_AM_I            0x0F
 #define LIS3MDL_ID                  0x3D
+
+//  LSM6DSOX Default Configuration Parameters
+#define LSM6DSOX_DEFAULT_ACCEL_FULLSCALE  2    // ±2G, ±4G, ±8G, ±16G
+#define LSM6DSOX_DEFAULT_GYRO_FULLSCALE   250  // ±250DPS, ±500DPS, ±1000DPS, ±2000DPS
+#define LSM6DSOX_DEFAULT_SAMPLE_RATE      104  // Hz: 12.5, 26, 52, 104, 208, 416, 833, 1660, 3330, 6660
+
+//  LIS3MDL Default Configuration Parameters
+#define LIS3MDL_DEFAULT_RANGE             4    // Gauss: 4, 8, 12, 16
+#define LIS3MDL_DEFAULT_DATARATE          80   // Hz: 0.625, 1.25, 2.5, 5, 10, 20, 40, 80, 155, 300, 560, 1000
+#define LIS3MDL_DEFAULT_XY_PERFORMANCE    1    // 0=Low, 1=Medium, 2=High, 3=UltraHigh
+#define LIS3MDL_DEFAULT_Z_PERFORMANCE     1    // 0=Low, 1=Medium, 2=High, 3=UltraHigh
+#define LIS3MDL_DEFAULT_MODE              0    // 0=Continuous, 1=Single-shot, 3=Power-down
 
 #endif // _RTIMUDEFS_H

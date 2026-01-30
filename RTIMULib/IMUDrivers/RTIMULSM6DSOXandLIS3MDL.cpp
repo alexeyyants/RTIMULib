@@ -114,12 +114,19 @@ bool RTIMULSM6DSOXandLIS3MDL::setLSM6DSOXConfig()
     }
     HAL_INFO1("  CTRL3_C set successfully (0x%02x)\n", ctrl3_c);
 
-    // Set accel: ±2G, 104 Hz (adapt ranges/data rates as needed)
-    HAL_INFO("  Setting LSM6DSOX CTRL1_XL...\n");
-    unsigned char lsm6dsox_odr = LSM6DSOX_ODR_104_HZ;
+    // Get sample rate and fullscale from settings
+    int sampleRate = m_settings->m_LSM6DSOXAccelSampleRate;
+    int accelFsr = m_settings->m_LSM6DSOXAccelFsr;
+    int gyroFsr = m_settings->m_LSM6DSOXGyroFsr;
+
+    unsigned char lsm6dsox_odr = mapLSM6DSOXSampleRateToODR(sampleRate);
     updateGyroSampleRate(lsm6dsox_odr);
-    unsigned char ctrl1_xl = LSM6DSOX_ACCELEROMETER_FULLSCALE_HM0_2G | lsm6dsox_odr;  // 104 Hz, ±2G
-    m_accelScale = 2.0 / 32768.0;  // Scale for ±2G
+
+    unsigned char accelFsrBits;
+    mapLSM6DSOXAccelFsrToBitsAndScale(accelFsr, accelFsrBits, m_accelScale);
+
+    HAL_INFO("  Setting LSM6DSOX CTRL1_XL...\n");
+    unsigned char ctrl1_xl = accelFsrBits | lsm6dsox_odr;
     if (!m_settings->HALWrite(m_lsm6dsoxAddr, LSM6DSOX_CTRL1_XL, ctrl1_xl, "Failed to set LSM6DSOX CTRL1_XL"))
     {
         HAL_ERROR("Failed to write CTRL1_XL\n");
@@ -127,10 +134,11 @@ bool RTIMULSM6DSOXandLIS3MDL::setLSM6DSOXConfig()
     }
     HAL_INFO1("  CTRL1_XL set successfully (0x%02x)\n", ctrl1_xl);
 
-    // Set gyro: ±250 DPS, 104 Hz
+    unsigned char gyroFsrBits;
+    mapLSM6DSOXGyroFsrToBitsAndScale(gyroFsr, gyroFsrBits, m_gyroScale);
+
     HAL_INFO("  Setting LSM6DSOX CTRL2_G...\n");
-    unsigned char ctrl2_g = LSM6DSOX_GYRO_FULLSCALE_250DPS | lsm6dsox_odr;  // Example: 104 Hz, ±250 DPS
-    m_gyroScale = (250.0 * RTMATH_DEGREE_TO_RAD) / 32768.0;  // Scale for ±250 DPS
+    unsigned char ctrl2_g = gyroFsrBits | lsm6dsox_odr;
     if (!m_settings->HALWrite(m_lsm6dsoxAddr, LSM6DSOX_CTRL2_G, ctrl2_g, "Failed to set LSM6DSOX CTRL2_G"))
     {
         HAL_ERROR("Failed to write CTRL2_G\n");
@@ -143,9 +151,21 @@ bool RTIMULSM6DSOXandLIS3MDL::setLSM6DSOXConfig()
 
 bool RTIMULSM6DSOXandLIS3MDL::setLIS3MDLConfig()
 {
+    // Get settings from RTIMUSettings
+    int dataRate = m_settings->m_LIS3MDLCompassSampleRate;
+    int range = m_settings->m_LIS3MDLCompassFsr;
+    int xyPerf = m_settings->m_LIS3MDLXYPerformance;
+    int zPerf = m_settings->m_LIS3MDLZPerformance;
+    int opMode = m_settings->m_LIS3MDLOperationMode;
+
+    // Map data rate to register bits
+    unsigned char dataRateBits = mapLIS3MDLDataRateToBits(dataRate);
+
+    // Map XY performance mode
+    unsigned char xyPerfBits = mapLIS3MDLXYPerfToBits(xyPerf);
 
     HAL_INFO("  Setting LIS3MDL CTRL_REG1...\n");
-    unsigned char ctrl1 = LIS3MDL_DATARATE_80_HZ | LIS3MDL_XY_MEDIUMMODE;  // 80 Hz, Medium performance
+    unsigned char ctrl1 = dataRateBits | xyPerfBits;
     if (!m_settings->HALWrite(m_lis3mdlAddr, LIS3MDL_REG_CTRL_REG1, ctrl1, "Failed to set LIS3MDL CTRL_REG1"))
     {
         HAL_ERROR("Failed to write CTRL_REG1\n");
@@ -153,9 +173,12 @@ bool RTIMULSM6DSOXandLIS3MDL::setLIS3MDLConfig()
     }
     HAL_INFO1("  CTRL_REG1 set successfully (0x%02x)\n", ctrl1);
 
+    // Map range to register bits
+    unsigned char rangeBits;
+    mapLIS3MDLRangeToBitsAndScale(range, rangeBits, m_compassScale);
+
     HAL_INFO("  Setting LIS3MDL CTRL_REG2...\n");
-    unsigned char ctrl2 = LIS3MDL_RANGE_4_GAUSS;  // ±4 Gauss (default)
-    m_compassScale = 4.0 / 32768.0;  // Gauss to Gauss scale (convert to µT later)
+    unsigned char ctrl2 = rangeBits;
     if (!m_settings->HALWrite(m_lis3mdlAddr, LIS3MDL_REG_CTRL_REG2, ctrl2, "Failed to set LIS3MDL CTRL_REG2"))
     {
         HAL_ERROR("Failed to write CTRL_REG2\n");
@@ -163,8 +186,11 @@ bool RTIMULSM6DSOXandLIS3MDL::setLIS3MDLConfig()
     }
     HAL_INFO1("  CTRL_REG2 set successfully (0x%02x)\n", ctrl2);
 
+    // Map operation mode to register bits
+    unsigned char modeBits = mapLIS3MDLOpModeToBits(opMode);
+
     HAL_INFO("  Setting LIS3MDL CTRL_REG3...\n");
-    unsigned char ctrl3 = LIS3MDL_CONTINUOUSMODE;  // Continuous mode
+    unsigned char ctrl3 = modeBits;
     if (!m_settings->HALWrite(m_lis3mdlAddr, LIS3MDL_REG_CTRL_REG3, ctrl3, "Failed to set LIS3MDL CTRL_REG3"))
     {
         HAL_ERROR("Failed to write CTRL_REG3\n");
@@ -172,8 +198,11 @@ bool RTIMULSM6DSOXandLIS3MDL::setLIS3MDLConfig()
     }
     HAL_INFO1("  CTRL_REG3 set successfully (0x%02x)\n", ctrl3);
 
+    // Map Z performance mode
+    unsigned char zPerfBits = mapLIS3MDLZPerfToBits(zPerf);
+
     HAL_INFO("  Setting LIS3MDL CTRL_REG4...\n");
-    unsigned char ctrl4 = LIS3MDL_Z_MEDIUMMODE;  // Medium performance for Z
+    unsigned char ctrl4 = zPerfBits;
     if (!m_settings->HALWrite(m_lis3mdlAddr, LIS3MDL_REG_CTRL_REG4, ctrl4, "Failed to set LIS3MDL CTRL_REG4"))
     {
         HAL_ERROR("Failed to write CTRL_REG4\n");
@@ -225,6 +254,196 @@ void RTIMULSM6DSOXandLIS3MDL::updateGyroSampleRate(
         break;
     default:
         break;
+    }
+}
+
+// Helper implementations
+unsigned char RTIMULSM6DSOXandLIS3MDL::mapLSM6DSOXSampleRateToODR(int sampleRate)
+{
+    switch (sampleRate)
+    {
+    case 12:
+        return LSM6DSOX_ODR_12_5_HZ;
+    case 26:
+        return LSM6DSOX_ODR_26_HZ;
+    case 52:
+        return LSM6DSOX_ODR_52_HZ;
+    case 104:
+        return LSM6DSOX_ODR_104_HZ;
+    case 208:
+        return LSM6DSOX_ODR_208_HZ;
+    case 416:
+        return LSM6DSOX_ODR_416_HZ;
+    case 833:
+        return LSM6DSOX_ODR_833_HZ;
+    case 1660:
+        return LSM6DSOX_ODR_1_66_kHZ;
+    case 3330:
+        return LSM6DSOX_ODR_3_33_kHZ;
+    case 6660:
+        return LSM6DSOX_ODR_6_66_kHZ;
+    default:
+        HAL_INFO1("  Unknown sample rate %d, using 104 Hz\n", sampleRate);
+        return LSM6DSOX_ODR_104_HZ;
+    }
+}
+
+void RTIMULSM6DSOXandLIS3MDL::mapLSM6DSOXAccelFsrToBitsAndScale(int accelFsr, unsigned char &bits, RTFLOAT &scale)
+{
+    switch (accelFsr)
+    {
+    case 2:
+        bits = LSM6DSOX_ACCELEROMETER_FULLSCALE_HM0_2G;
+        scale = 2.0 / 32768.0;
+        break;
+    case 4:
+        bits = LSM6DSOX_ACCELEROMETER_FULLSCALE_HM0_4G;
+        scale = 4.0 / 32768.0;
+        break;
+    case 8:
+        bits = LSM6DSOX_ACCELEROMETER_FULLSCALE_HM0_8G;
+        scale = 8.0 / 32768.0;
+        break;
+    case 16:
+        bits = LSM6DSOX_ACCELEROMETER_FULLSCALE_HM0_16G;
+        scale = 16.0 / 32768.0;
+        break;
+    default:
+        HAL_INFO1("  Unknown accel fullscale %d, using ±2G\n", accelFsr);
+        bits = LSM6DSOX_ACCELEROMETER_FULLSCALE_HM0_2G;
+        scale = 2.0 / 32768.0;
+        break;
+    }
+}
+
+void RTIMULSM6DSOXandLIS3MDL::mapLSM6DSOXGyroFsrToBitsAndScale(int gyroFsr, unsigned char &bits, RTFLOAT &scale)
+{
+    switch (gyroFsr)
+    {
+    case 250:
+        bits = LSM6DSOX_GYRO_FULLSCALE_250DPS;
+        scale = (250.0 * RTMATH_DEGREE_TO_RAD) / 32768.0;
+        break;
+    case 500:
+        bits = LSM6DSOX_GYRO_FULLSCALE_500DPS;
+        scale = (500.0 * RTMATH_DEGREE_TO_RAD) / 32768.0;
+        break;
+    case 1000:
+        bits = LSM6DSOX_GYRO_FULLSCALE_1000DPS;
+        scale = (1000.0 * RTMATH_DEGREE_TO_RAD) / 32768.0;
+        break;
+    case 2000:
+        bits = LSM6DSOX_GYRO_FULLSCALE_2000DPS;
+        scale = (2000.0 * RTMATH_DEGREE_TO_RAD) / 32768.0;
+        break;
+    default:
+        HAL_INFO1("  Unknown gyro fullscale %d, using ±250DPS\n", gyroFsr);
+        bits = LSM6DSOX_GYRO_FULLSCALE_250DPS;
+        scale = (250.0 * RTMATH_DEGREE_TO_RAD) / 32768.0;
+        break;
+    }
+}
+
+unsigned char RTIMULSM6DSOXandLIS3MDL::mapLIS3MDLDataRateToBits(int dataRate)
+{
+    switch (dataRate)
+    {
+    case 0:
+        return LIS3MDL_DATARATE_0_625_HZ;
+    case 1:
+        return LIS3MDL_DATARATE_1_25_HZ;
+    case 2:
+        return LIS3MDL_DATARATE_2_5_HZ;
+    case 5:
+        return LIS3MDL_DATARATE_5_HZ;
+    case 10:
+        return LIS3MDL_DATARATE_10_HZ;
+    case 20:
+        return LIS3MDL_DATARATE_20_HZ;
+    case 40:
+        return LIS3MDL_DATARATE_40_HZ;
+    case 80:
+        return LIS3MDL_DATARATE_80_HZ;
+    case 155:
+        return LIS3MDL_DATARATE_155_HZ;
+    case 300:
+        return LIS3MDL_DATARATE_300_HZ;
+    case 560:
+        return LIS3MDL_DATARATE_560_HZ;
+    case 1000:
+        return LIS3MDL_DATARATE_1000_HZ;
+    default:
+        HAL_INFO1("  Unknown LIS3MDL data rate %d, using 80 Hz\n", dataRate);
+        return LIS3MDL_DATARATE_80_HZ;
+    }
+}
+
+unsigned char RTIMULSM6DSOXandLIS3MDL::mapLIS3MDLXYPerfToBits(int xyPerf)
+{
+    switch (xyPerf)
+    {
+    case 0: return LIS3MDL_XY_LOWPOWERMODE;
+    case 1: return LIS3MDL_XY_MEDIUMMODE;
+    case 2: return LIS3MDL_XY_HIGHMODE;
+    case 3: return LIS3MDL_XY_ULTRAHIGHMODE;
+    default:
+        HAL_INFO1("  Unknown LIS3MDL XY performance %d, using Medium\n", xyPerf);
+        return LIS3MDL_XY_MEDIUMMODE;
+    }
+}
+
+unsigned char RTIMULSM6DSOXandLIS3MDL::mapLIS3MDLZPerfToBits(int zPerf)
+{
+    switch (zPerf)
+    {
+    case 0: return LIS3MDL_Z_LOWPOWERMODE;
+    case 1: return LIS3MDL_Z_MEDIUMMODE;
+    case 2: return LIS3MDL_Z_HIGHMODE;
+    case 3: return LIS3MDL_Z_ULTRAHIGHMODE;
+    default:
+        HAL_INFO1("  Unknown LIS3MDL Z performance %d, using Medium\n", zPerf);
+        return LIS3MDL_Z_MEDIUMMODE;
+    }
+}
+
+void RTIMULSM6DSOXandLIS3MDL::mapLIS3MDLRangeToBitsAndScale(int range, unsigned char &bits, RTFLOAT &scale)
+{
+    switch (range)
+    {
+    case 4:
+        bits = LIS3MDL_RANGE_4_GAUSS;
+        scale = 4.0 / 32768.0;
+        break;
+    case 8:
+        bits = LIS3MDL_RANGE_8_GAUSS;
+        scale = 8.0 / 32768.0;
+        break;
+    case 12:
+        bits = LIS3MDL_RANGE_12_GAUSS;
+        scale = 12.0 / 32768.0;
+        break;
+    case 16:
+        bits = LIS3MDL_RANGE_16_GAUSS;
+        scale = 16.0 / 32768.0;
+        break;
+    default:
+        HAL_INFO1("  Unknown LIS3MDL range %d, using ±4 Gauss\n", range);
+        bits = LIS3MDL_RANGE_4_GAUSS;
+        scale = 4.0 / 32768.0;
+        break;
+    }
+}
+
+unsigned char RTIMULSM6DSOXandLIS3MDL::mapLIS3MDLOpModeToBits(int opMode)
+{
+    switch (opMode)
+    {
+    case 0: return LIS3MDL_CONTINUOUSMODE;
+    case 1: return LIS3MDL_SINGLESHOTMODE;
+    case 3: return LIS3MDL_POWERDOWNMODE;
+    default:
+        HAL_INFO1("  Unknown LIS3MDL operation mode %d, using Continuous\n", opMode);
+        return LIS3MDL_CONTINUOUSMODE;
     }
 }
 

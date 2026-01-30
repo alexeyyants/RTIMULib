@@ -155,6 +155,9 @@
 
 #define RTIMULIB_LIS3MDL_COMPASS_SAMPLERATE "LIS3MDLCompassSampleRate"
 #define RTIMULIB_LIS3MDL_COMPASS_FSR        "LIS3MDLCompassFsr"
+#define RTIMULIB_LIS3MDL_XY_PERFORMANCE     "LIS3MDLXYPerformance"
+#define RTIMULIB_LIS3MDL_Z_PERFORMANCE      "LIS3MDLZPerformance"
+#define RTIMULIB_LIS3MDL_OPERATION_MODE     "LIS3MDLOperationMode"
 
 //  Gyro bias keys
 
@@ -372,6 +375,9 @@ public:
     //  LIS3MDL
     int m_LIS3MDLCompassSampleRate;                         // the compass sample rate
     int m_LIS3MDLCompassFsr;                                // the compass full scale range
+    int m_LIS3MDLXYPerformance;                             // XY performance mode
+    int m_LIS3MDLZPerformance;                              // Z performance mode
+    int m_LIS3MDLOperationMode;                             // Operation mode (continuous/single-shot/power-down)
 
 private:
     void setBlank();
