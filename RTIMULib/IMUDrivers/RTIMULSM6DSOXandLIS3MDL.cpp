@@ -231,7 +231,8 @@ void RTIMULSM6DSOXandLIS3MDL::updateGyroSampleRate(
 bool RTIMULSM6DSOXandLIS3MDL::IMURead()
 {
     unsigned char status;
-    unsigned char gyroAccelData[12];  // Gyro (6) + Accel (6)
+    unsigned char gyroData[6];
+    unsigned char accelData[6];
     unsigned char compassData[6];
 
     HAL_INFO("IMURead called\n");
@@ -242,34 +243,44 @@ bool RTIMULSM6DSOXandLIS3MDL::IMURead()
     HAL_INFO1("LSM6DSOX status: 0x%02x\n", status);
     if ((status & 0x03) == 0)  // Check if gyro and accel data ready
     {
-        HAL_INFO("LSM6DSOX data not ready\n");
+        HAL_INFO("LSM6DSOX or LIS3MDL data not ready\n");
         return false;
     }
-    HAL_INFO("LSM6DSOX data ready\n");
+    HAL_INFO("LSM6DSOX and LIS3MDL data ready\n");
 
     // Read gyro and accel data
-    if (!m_settings->HALRead(m_lsm6dsoxAddr, 0x80 | LSM6DSOX_OUTX_L_G, 12, gyroAccelData, "Failed to read LSM6DSOX data"))
-        return false;
-    HAL_INFO("Raw LSM6DSOX data: ");
-    for (int i = 0; i < 12; i++) {
-        HAL_INFO1("%02x ", gyroAccelData[i]);
+        // Read LSM6DSOX gyroscope data byte-by-byte
+    bool ok1 = true;
+    for (int i = 0; i < 6; i++) {
+        unsigned char regAddr = LSM6DSOX_OUTX_L_G + i;
+        if (!m_settings->HALRead(m_lsm6dsoxAddr, regAddr, 1, &gyroData[i], "Failed to read LSM6DSOX gyro byte")) {
+            ok1 = false;
+            break;
+        }
     }
-    HAL_INFO("\n");
+
+    // Read LSM6DSOX accelerometer data byte-by-byte
+    for (int i = 0; i < 6; i++) {
+        unsigned char regAddr = LSM6DSOX_OUTX_L_A + i;
+        if (!m_settings->HALRead(m_lsm6dsoxAddr, regAddr, 1, &accelData[i], "Failed to read LSM6DSOX accel byte")) {
+            ok1 = false;
+            break;
+        }
+    }
+    // if (!m_settings->HALRead(m_lsm6dsoxAddr, 0x80 | LSM6DSOX_OUTX_L_G, 6, gyroData, "Failed to read LSM6DSOX gyro data"))
+    //     return false;
+    // if (!m_settings->HALRead(m_lsm6dsoxAddr, 0x80 | LSM6DSOX_OUTX_L_A, 6, accelData, "Failed to read LSM6DSOX accel data"))
+    //     return false;
 
     // Read compass data from LIS3MDL
     if (!m_settings->HALRead(m_lis3mdlAddr, 0x80 | LIS3MDL_REG_OUT_X_L, 6, compassData, "Failed to read LIS3MDL data"))
         return false;
-    HAL_INFO("Raw LIS3MDL data: ");
-    for (int i = 0; i < 6; i++) {
-        HAL_INFO1("%02x ", compassData[i]);
-    }
-    HAL_INFO("\n");
 
     m_imuData.timestamp = RTMath::currentUSecsSinceEpoch();
 
     // Convert gyro and accel
-    RTMath::convertToVector(gyroAccelData, m_imuData.gyro, m_gyroScale, false);
-    RTMath::convertToVector(gyroAccelData + 6, m_imuData.accel, m_accelScale, false);
+    RTMath::convertToVector(gyroData, m_imuData.gyro, m_gyroScale, false);
+    RTMath::convertToVector(accelData, m_imuData.accel, m_accelScale, false);
 
     HAL_INFO3("Converted accel: %.3f, %.3f, %.3f\n", m_imuData.accel.x(), m_imuData.accel.y(), m_imuData.accel.z());
     HAL_INFO3("Converted gyro: %.3f, %.3f, %.3f\n", m_imuData.gyro.x(), m_imuData.gyro.y(), m_imuData.gyro.z());
@@ -303,14 +314,6 @@ void RTIMULSM6DSOXandLIS3MDL::verifyConfigs()
     unsigned char val;
 
     HAL_INFO("Verifying LSM6DSOX registers...\n");
-    if (!m_settings->HALRead(m_lsm6dsoxAddr, LSM6DSOX_CTRL3_C, 1, &val, "Failed to read LSM6DSOX CTRL3_C"))
-    {
-        HAL_ERROR("Failed to read LSM6DSOX CTRL3_C\n");
-    }
-    else
-    {
-        HAL_INFO1("  CTRL3_C = 0x%02x\n", val);
-    }
 
     if (!m_settings->HALRead(m_lsm6dsoxAddr, LSM6DSOX_CTRL1_XL, 1, &val, "Failed to read LSM6DSOX CTRL1_XL"))
     {
@@ -326,6 +329,78 @@ void RTIMULSM6DSOXandLIS3MDL::verifyConfigs()
     else
     {
         HAL_INFO1("  CTRL2_G = 0x%02x\n", val);
+    }
+    
+    if (!m_settings->HALRead(m_lsm6dsoxAddr, LSM6DSOX_CTRL3_C, 1, &val, "Failed to read LSM6DSOX CTRL3_C"))
+    {
+        HAL_ERROR("Failed to read LSM6DSOX CTRL3_C\n");
+    }
+    else
+    {
+        HAL_INFO1("  CTRL3_C = 0x%02x\n", val);
+    }
+
+    if (!m_settings->HALRead(m_lsm6dsoxAddr, LSM6DSOX_CTRL4_C, 1, &val, "Failed to read LSM6DSOX CTRL4_C"))
+    {
+        HAL_ERROR("Failed to read LSM6DSOX CTRL4_C\n");
+    }
+    else
+    {
+        HAL_INFO1("  CTRL4_C = 0x%02x\n", val);
+    }
+
+    if (!m_settings->HALRead(m_lsm6dsoxAddr, LSM6DSOX_CTRL5_C, 1, &val, "Failed to read LSM6DSOX CTRL5_C"))
+    {
+        HAL_ERROR("Failed to read LSM6DSOX CTRL5_C\n");
+    }
+    else
+    {
+        HAL_INFO1("  CTRL5_C = 0x%02x\n", val);
+    }
+
+    if (!m_settings->HALRead(m_lsm6dsoxAddr, LSM6DSOX_CTRL6_C, 1, &val, "Failed to read LSM6DSOX CTRL6_C"))
+    {
+        HAL_ERROR("Failed to read LSM6DSOX CTRL6_C\n");
+    }
+    else
+    {
+        HAL_INFO1("  CTRL6_C = 0x%02x\n", val);
+    }
+
+    if (!m_settings->HALRead(m_lsm6dsoxAddr, LSM6DSOX_CTRL7_G, 1, &val, "Failed to read LSM6DSOX CTRL7_G"))
+    {
+        HAL_ERROR("Failed to read LSM6DSOX CTRL7_G\n");
+    }
+    else
+    {
+        HAL_INFO1("  CTRL7_G = 0x%02x\n", val);
+    }
+
+    if (!m_settings->HALRead(m_lsm6dsoxAddr, LSM6DSOX_CTRL8_XL, 1, &val, "Failed to read LSM6DSOX CTRL8_XL"))
+    {
+        HAL_ERROR("Failed to read LSM6DSOX CTRL8_XL\n");
+    }
+    else
+    {
+        HAL_INFO1("  CTRL8_XL = 0x%02x\n", val);
+    }
+
+    if (!m_settings->HALRead(m_lsm6dsoxAddr, LSM6DSOX_CTRL9_XL, 1, &val, "Failed to read LSM6DSOX CTRL9_XL"))
+    {
+        HAL_ERROR("Failed to read LSM6DSOX CTRL9_XL\n");
+    }
+    else
+    {
+        HAL_INFO1("  CTRL9_XL = 0x%02x\n", val);
+    }
+
+    if (!m_settings->HALRead(m_lsm6dsoxAddr, LSM6DSOX_CTRL10_C, 1, &val, "Failed to read LSM6DSOX CTRL10_C"))
+    {
+        HAL_ERROR("Failed to read LSM6DSOX CTRL10_C\n");
+    }
+    else
+    {
+        HAL_INFO1("  CTRL10_C = 0x%02x\n", val);
     }
 
     HAL_INFO("Verifying LIS3MDL registers...\n");
@@ -369,18 +444,32 @@ void RTIMULSM6DSOXandLIS3MDL::verifyConfigs()
 // Dump raw data registers as a single-line: "<LSM6DSOX regs | LIS3MDL regs>"
 void RTIMULSM6DSOXandLIS3MDL::dumpRawData()
 {
-    unsigned char buf[12];
+    unsigned char gyro[6];
+    unsigned char accel[6];
     unsigned char mag[6];
 
-    // Read LSM6DSOX data byte-by-byte (0x22-0x2D: gyro 0x22-0x27, accel 0x28-0x2D)
+    // Read LSM6DSOX gyroscope data byte-by-byte
     bool ok1 = true;
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < 6; i++) {
         unsigned char regAddr = LSM6DSOX_OUTX_L_G + i;
-        if (!m_settings->HALRead(m_lsm6dsoxAddr, regAddr, 1, &buf[i], "Failed to read LSM6DSOX byte")) {
+        if (!m_settings->HALRead(m_lsm6dsoxAddr, regAddr, 1, &gyro[i], "Failed to read LSM6DSOX gyro byte")) {
             ok1 = false;
             break;
         }
     }
+
+    // Read LSM6DSOX accelerometer data byte-by-byte
+    for (int i = 0; i < 6; i++) {
+        unsigned char regAddr = LSM6DSOX_OUTX_L_A + i;
+        if (!m_settings->HALRead(m_lsm6dsoxAddr, regAddr, 1, &accel[i], "Failed to read LSM6DSOX accel byte")) {
+            ok1 = false;
+            break;
+        }
+    }
+
+    // Read LSM6DSOX data (multi-byte)
+    // ok1 = m_settings->HALRead(m_lsm6dsoxAddr, 0x80 | LSM6DSOX_OUTX_L_G, 6, gyro, "Failed to read LSM6DSOX gyro data");
+    // ok1 &= m_settings->HALRead(m_lsm6dsoxAddr, 0x80 | LSM6DSOX_OUTX_L_A, 6, accel, "Failed to read LSM6DSOX accel data");
 
     // Read LIS3MDL data (multi-byte)
     bool ok2 = m_settings->HALRead(m_lis3mdlAddr, 0x80 | LIS3MDL_REG_OUT_X_L, 6, mag, "Failed to read LIS3MDL data");
@@ -388,8 +477,12 @@ void RTIMULSM6DSOXandLIS3MDL::dumpRawData()
     HAL_INFO("<");
     if (ok1) {
         HAL_INFO("LSM6DSOX regs ");
-        for (int i = 0; i < 12; i++) {
-            HAL_INFO1("%02x ", buf[i]);
+        for (int i = 0; i < 6; i++) {
+            HAL_INFO1("%02x ", gyro[i]);
+        }
+        HAL_INFO(" | ");
+        for (int i = 0; i < 6; i++) {
+            HAL_INFO1("%02x ", accel[i]);
         }
     } else {
         HAL_INFO("LSM6DSOX read-fail ");

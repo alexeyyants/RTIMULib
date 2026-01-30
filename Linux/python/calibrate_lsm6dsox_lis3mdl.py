@@ -30,9 +30,11 @@ print("Starting calibration. Move the IMU in all directions...")
 print("Press Ctrl+C to stop and save calibration.")
 
 poll_interval = imu.IMUGetPollInterval()
+print("Recommended Poll Interval: %dmS\n" % poll_interval)
 
 try:
-    while True:
+    doit = True
+    while doit:
         if imu.IMURead():
             # Data is being collected automatically in calibration mode
             data = imu.getIMUData()
@@ -42,6 +44,7 @@ try:
                 accel[0], accel[1], accel[2],
                 compass[0], compass[1], compass[2]))
         time.sleep(poll_interval / 1000.0)
+        doit = False  # Remove this line to run indefinitely
 except KeyboardInterrupt:
     print("\nCalibration stopped. Saving settings...")
     s.saveSettings()
