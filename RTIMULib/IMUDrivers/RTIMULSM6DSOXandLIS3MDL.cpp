@@ -106,7 +106,7 @@ bool RTIMULSM6DSOXandLIS3MDL::setLSM6DSOXConfig()
     // in order to disable accelerometer high performance mode, CTRL6_C bit 5 must be set to 1
 
     HAL_INFO("  Setting LSM6DSOX CTRL3_C...\n");
-    unsigned char ctrl3_c = LSM6DSOX_CTRL3_C_BDU_ENABLED | LSM6DSOX_CTRL3_C_INCREMENT_ENABLED;  // I2C enable, BDU on
+    unsigned char ctrl3_c = LSM6DSOX_CTRL3_C_BDU_DISABLED | LSM6DSOX_CTRL3_C_INCREMENT_ENABLED;  // I2C enable, continuous update, auto-increment
     if (!m_settings->HALWrite(m_lsm6dsoxAddr, LSM6DSOX_CTRL3_C, ctrl3_c, "Failed to set LSM6DSOX CTRL3_C"))
     {
         HAL_ERROR("Failed to write CTRL3_C\n");
@@ -468,13 +468,11 @@ bool RTIMULSM6DSOXandLIS3MDL::IMURead()
     HAL_INFO("LSM6DSOX and LIS3MDL data ready\n");
 
     // Read gyro and accel data
-        // Read LSM6DSOX gyroscope data byte-by-byte
-    bool ok1 = true;
+    // Read LSM6DSOX gyroscope data byte-by-byte
     for (int i = 0; i < 6; i++) {
         unsigned char regAddr = LSM6DSOX_OUTX_L_G + i;
         if (!m_settings->HALRead(m_lsm6dsoxAddr, regAddr, 1, &gyroData[i], "Failed to read LSM6DSOX gyro byte")) {
-            ok1 = false;
-            break;
+            return false;
         }
     }
 
@@ -482,8 +480,7 @@ bool RTIMULSM6DSOXandLIS3MDL::IMURead()
     for (int i = 0; i < 6; i++) {
         unsigned char regAddr = LSM6DSOX_OUTX_L_A + i;
         if (!m_settings->HALRead(m_lsm6dsoxAddr, regAddr, 1, &accelData[i], "Failed to read LSM6DSOX accel byte")) {
-            ok1 = false;
-            break;
+            return false;
         }
     }
     // if (!m_settings->HALRead(m_lsm6dsoxAddr, 0x80 | LSM6DSOX_OUTX_L_G, 6, gyroData, "Failed to read LSM6DSOX gyro data"))
@@ -491,9 +488,13 @@ bool RTIMULSM6DSOXandLIS3MDL::IMURead()
     // if (!m_settings->HALRead(m_lsm6dsoxAddr, 0x80 | LSM6DSOX_OUTX_L_A, 6, accelData, "Failed to read LSM6DSOX accel data"))
     //     return false;
 
-    // Read compass data from LIS3MDL
-    if (!m_settings->HALRead(m_lis3mdlAddr, 0x80 | LIS3MDL_REG_OUT_X_L, 6, compassData, "Failed to read LIS3MDL data"))
-        return false;
+    // Read compass data from LIS3MDL byte-by-byte (multi-byte reads can fail on some I2C implementations)
+    for (int i = 0; i < 6; i++) {
+        unsigned char regAddr = LIS3MDL_REG_OUT_X_L + i;
+        if (!m_settings->HALRead(m_lis3mdlAddr, regAddr, 1, &compassData[i], "Failed to read LIS3MDL data byte")) {
+            return false;
+        }
+    }
 
     m_imuData.timestamp = RTMath::currentUSecsSinceEpoch();
 

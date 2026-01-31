@@ -36,7 +36,6 @@
 #include "RTIMULSM9DS1.h"
 #include "RTIMUBMX055.h"
 #include "RTIMUBNO055.h"
-// #include "RTIMULIS3MDL.h"
 #include "RTIMULSM6DSOXandLIS3MDL.h"
 
 //  this sets the learning rate for compass running average calculation
@@ -120,9 +119,6 @@ RTIMU *RTIMU::createIMU(RTIMUSettings *settings)
             return RTIMU::createIMU(settings);
         }
         return new RTIMUNull(settings);
-
-    // case RTIMU_TYPE_LIS3MDL:
-    //     return new RTIMULIS3MDL(settings);
 
     case RTIMU_TYPE_LSM6DSOX_LIS3MDL:
         return new RTIMULSM6DSOXandLIS3MDL(settings);
