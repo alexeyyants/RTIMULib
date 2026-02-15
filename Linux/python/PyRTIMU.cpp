@@ -29,6 +29,10 @@
 #include "PyRTPressure.h"
 #include "PyRTHumidity.h"
 
+#ifndef RTIMULIB_VERSION_STRING
+#define RTIMULIB_VERSION_STRING "7.2.1"
+#endif
+
 // RTIMU Method Table
 /////////////////////
 static PyMethodDef RTIMUMethods[] = {
@@ -95,6 +99,10 @@ PyMODINIT_FUNC initRTIMU()
         return 0;
     if (RTIMU_RTHumidity_create(m) < 0)
         return 0;
+    
+    // Add version string
+    PyModule_AddStringConstant(m, "__version__", RTIMULIB_VERSION_STRING);
+    
     return m;
 #else
     if (RTIMU_Settings_create(m) < 0)
@@ -105,6 +113,10 @@ PyMODINIT_FUNC initRTIMU()
         return;
     if (RTIMU_RTHumidity_create(m) < 0)
         return;
+    
+    // Add version string
+    PyModule_AddStringConstant(m, "__version__", RTIMULIB_VERSION_STRING);
+    
     return;
 #endif
 }

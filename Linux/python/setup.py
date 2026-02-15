@@ -24,6 +24,25 @@
 
 from distutils.core import setup, Extension
 import os.path
+import re
+import shutil
+
+# Read version from RTIMULibVersion.txt
+def get_version():
+    version_file = os.path.join(os.path.dirname(__file__), '../../RTIMULibVersion.txt')
+    with open(version_file, 'r') as f:
+        content = f.read()
+    
+    major = re.search(r'SET\(RTIMULIB_VERSION_MAJOR\s+(\d+)\)', content)
+    minor = re.search(r'SET\(RTIMULIB_VERSION_MINOR\s+(\d+)\)', content)
+    patch = re.search(r'SET\(RTIMULIB_VERSION_PATCH\s+(\d+)\)', content)
+    
+    if major and minor and patch:
+        return "{}.{}.{}".format(major.group(1), minor.group(1), patch.group(1))
+    else:
+        raise ValueError("Could not parse version from RTIMULibVersion.txt")
+
+RTIMULIB_VERSION = get_version()
 
 RTIMU_sources = [
     "RTMath.cpp",
@@ -55,16 +74,17 @@ RTIMU_sources = [
    ]
 RTIMU_sourcedir = "../../RTIMULib"
 
+# Build C extension with original name for compatibility
 mod = Extension('RTIMU',
                 sources = ['PyRTIMU.cpp', 'PyRTIMU_Settings.cpp', 'PyRTIMU_RTIMU.cpp', 
                 'PyRTIMU_RTPressure.cpp', 'PyRTIMU_RTHumidity.cpp'] +
                 [ os.path.join(RTIMU_sourcedir, sr) for sr in RTIMU_sources],
                 include_dirs = [RTIMU_sourcedir],
                 extra_compile_args = ['-std=c++0x'],
-                define_macros = [("HAL_QUIET", None)]
+                define_macros = [('RTIMULIB_VERSION_STRING', '"{}"'.format(RTIMULIB_VERSION)), ("HAL_QUIET", None)]
                 )
 
 setup (name = 'RTIMULib',
-       version = '7.2.1',
+       version = RTIMULIB_VERSION,
        description = 'richards-tech IMU Sensor Fusion Library',
        ext_modules = [mod])

@@ -6,7 +6,7 @@ import time
 import RTIMU
 
 # Settings file
-SETTINGS_FILE = "RTIMULib_LSM6DSOX_LIS3MDL"
+SETTINGS_FILE = "LSM6DSOX_LIS3MDL_Config"
 
 # Create settings
 s = RTIMU.Settings(SETTINGS_FILE)
